@@ -30,10 +30,14 @@ for doc in documentos:
     tokens = tokenizador.tokenize(doc)
     docs_tokenizados.append(tokens)
 
-# Treinando um modelo Word2vec nos documentos
-print("Treinando modelo w2v...")
-w2v_model = models.Word2Vec(docs_tokenizados, size=350, window=5, min_count=0, workers=os.cpu_count(), iter=300)
-# w2v_model = models.Word2Vec.load("modelos/w2v_sertanejo_1000musicas.model")
+caminho_modelo_w2v = "modelos/w2v_sertanejo_1000musicas.model"
+if os.path.isfile(caminho_modelo_w2v):
+    print("Carregando modelo w2v prévio...")
+    w2v_model = models.Word2Vec.load(caminho_modelo_w2v)
+else:
+    print("Treinando modelo w2v...")
+    w2v_model = models.Word2Vec(docs_tokenizados, size=350, window=5, min_count=0, workers=os.cpu_count(), iter=300)
+    w2v_model.save(caminho_modelo_w2v)
 
 vocab = list(w2v_model.wv.vocab)
 
@@ -66,12 +70,10 @@ for i, sentence in enumerate(sentences):
         x[i, t] = word2idx(token)
     y[i] = word2idx(next_tokens[i])
 
-
 pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
-
 
 # Definindo o modelo LSTM
 model = Sequential()
@@ -129,6 +131,4 @@ callbacks_list.append(print_callback)
 
 print(model.summary())
 
-
 model.fit(x, y, epochs=1, batch_size=64, callbacks=callbacks_list)
-

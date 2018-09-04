@@ -7,7 +7,7 @@ from keras.callbacks import ModelCheckpoint, LambdaCallback
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM, Embedding, Bidirectional
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from sklearn import feature_extraction
 import numpy as np
 
@@ -75,22 +75,20 @@ tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
-# Definindo o modelo LSTM
-model = Sequential()
-# A cama de de Embedding é onde podemos passar para a LSTM os vetores já treinados pelo word2vec
-model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
-model.add(Bidirectional(LSTM(350, activation="relu", return_sequences=True)))
-model.add(Dropout(0.1))
-model.add(LSTM(units=280))
-# model.add(LSTM(64, input_shape=(pretrained_weights.shape[0], pretrained_weights.shape[1]) ))
-# model.add(Dropout(0.1))
-model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possíveis. Tokens neste caso.
-model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
-
-# define the checkpoint
 caminho_modelo_lstm = "modelos/bilstm-w2v-wordlevel-350-280-sertanejo.model"
-checkpoint = ModelCheckpoint(caminho_modelo_lstm, monitor='loss', verbose=1, save_best_only=True, mode='min')
-callbacks_list = [checkpoint]
+if os.path.isfile(caminho_modelo_lstm):
+    print("Carregando modelo lstm previo...")
+    model = load_model(caminho_modelo_lstm)
+else:
+    print("Criando novo modelo LSTM")
+    model = Sequential()
+    model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
+    model.add(Bidirectional(LSTM(350, activation="relu", return_sequences=True)))
+    model.add(Dropout(0.1))
+    model.add(LSTM(units=280))
+    model.add(Dropout(0.1))
+    model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possíveis. Tokens neste caso.
+    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
 
 
 def gerar_texto(epoch, logs):
@@ -125,9 +123,9 @@ def gerar_texto(epoch, logs):
     print("\n\nFIM\n\n", )
 
 
-# Callback para gerar texto de exemplo ao final de cada iteração de treino
+checkpoint = ModelCheckpoint(caminho_modelo_lstm, monitor='loss', verbose=1, save_best_only=True, mode='min')
 print_callback = LambdaCallback(on_epoch_end=gerar_texto)
-callbacks_list.append(print_callback)
+callbacks_list = [checkpoint, print_callback]
 
 print(model.summary())
 

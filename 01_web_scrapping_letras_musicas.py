@@ -32,7 +32,7 @@ for doc in documentos:
 
 caminho_modelo_w2v = "modelos/w2v_sertanejo_1000musicas.model"
 if os.path.isfile(caminho_modelo_w2v):
-    print("Carregando modelo w2v prévio...")
+    print("Carregando modelo w2v previo...")
     w2v_model = models.Word2Vec.load(caminho_modelo_w2v)
 else:
     print("Treinando modelo w2v...")

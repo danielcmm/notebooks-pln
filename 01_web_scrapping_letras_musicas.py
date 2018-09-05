@@ -51,7 +51,7 @@ def idx2word(idx):
     return w2v_model.wv.index2word[idx]
 
 
-maxlen = 10
+maxlen = 15
 sentences = []
 next_tokens = []
 
@@ -76,7 +76,7 @@ tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
 units1 = 720
-caminho_modelo_lstm = "modelos/bilstm-w2v-wordlevel-{}-sertanejo.model".format(units1)
+caminho_modelo_lstm = "modelos/bilstm-w2v-wordlevel-{}len-{}-sertanejo.model".format(maxlen, units1)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
     model = load_model(caminho_modelo_lstm)

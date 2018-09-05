@@ -130,4 +130,4 @@ callbacks_list = [checkpoint, print_callback]
 
 print(model.summary())
 
-model.fit(x, y, epochs=1, batch_size=64, callbacks=callbacks_list)
+model.fit(x, y, epochs=100, batch_size=64, callbacks=callbacks_list)

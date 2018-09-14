@@ -6,7 +6,7 @@ from gensim import models
 from keras.callbacks import ModelCheckpoint, LambdaCallback
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import LSTM, Embedding, Bidirectional
+from keras.layers import LSTM, Embedding, Bidirectional, CuDNNLSTM
 from keras.models import Sequential, load_model
 from sklearn import feature_extraction
 import numpy as np
@@ -75,8 +75,9 @@ tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
-units1 = 720
-caminho_modelo_lstm = "modelos/bilstm-w2v-wordlevel-{}len-{}-sertanejo.model".format(maxlen, units1)
+units1 = 128
+units2 = 128
+caminho_modelo_lstm = "modelos/bilstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1,units2)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
     model = load_model(caminho_modelo_lstm)
@@ -84,10 +85,10 @@ else:
     print("Criando novo modelo LSTM")
     model = Sequential()
     model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
-    model.add(Bidirectional(LSTM(units1, activation="relu", return_sequences=False)))
+    model.add(LSTM(units1,  return_sequences=True))
     model.add(Dropout(0.1))
-    # model.add(LSTM(units=280))
-    # model.add(Dropout(0.1))
+    model.add(LSTM(units=units2))
+    model.add(Dropout(0.1))
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possíveis. Tokens neste caso.
     model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
 
@@ -130,4 +131,4 @@ callbacks_list = [checkpoint, print_callback]
 
 print(model.summary())
 
-model.fit(x, y, epochs=100, batch_size=64, callbacks=callbacks_list)
+model.fit(x, y, epochs=1, batch_size=64, callbacks=callbacks_list)

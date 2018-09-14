@@ -42,7 +42,7 @@ else:
 vocab = list(w2v_model.wv.vocab)
 
 
-# Funcoes que retornam o índice da palavra no vocabulário criado pelo word2vec e vice-versa
+# Funcoes que retornam o indice da palavra no vocabulário criado pelo word2vec e vice-versa
 def word2idx(word):
     return w2v_model.wv.vocab[word].index
 
@@ -89,8 +89,8 @@ else:
     model.add(Dropout(0.1))
     model.add(LSTM(units=units2))
     model.add(Dropout(0.1))
-    model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possíveis. Tokens neste caso.
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
+    model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
+    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
 
 
 def gerar_texto(epoch, logs):

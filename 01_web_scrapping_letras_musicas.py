@@ -18,6 +18,7 @@ parser.add_argument("-units1", type=int, default=30)
 parser.add_argument("-units2", type=int, default=30)
 parser.add_argument("-batchsize", type=int, default=64)
 parser.add_argument("-gpu", type=bool, default=False)
+parser.add_argument("-t", type=int, default=5)
 
 args = vars(parser.parse_args())
 print(args)
@@ -117,13 +118,13 @@ else:
 def gerar_texto(epoch, logs):
     print('----- Generating text after Epoch: %d' % epoch)
 
-    # pick a random seed
     start = np.random.randint(0, len(sentences))
     seed_tokens = list(sentences[start])
     print("Seed:")
     print("\"", " ".join(seed_tokens), "\"\n")
+    temperatura = args["t"]
 
-    # generate characters
+    aux = 1
     for i in range(500):
 
         xt = np.zeros((1, maxlen), dtype=np.int32)
@@ -133,13 +134,17 @@ def gerar_texto(epoch, logs):
 
         prediction = model.predict(xt, verbose=0)
 
-        # ordered = (-prediction[0]).argsort()[:5]
-        # indice = np.random.choice(ordered)
-        indice = (np.argmax(prediction))
+        if temperatura > 0 and aux % temperatura == 0:
+            ordered = (-prediction[0]).argsort()[:3]
+            indice = np.random.choice(ordered)
+        else:
+            indice = (np.argmax(prediction))
+
         result = idx2word(indice)
-        print("\n" if result == "NLINHAasda" else result, end=" ")
+        print("\n" if result == "NLINHA" else result, end=" ")
         seed_tokens.append(result)
         seed_tokens = seed_tokens[1:len(seed_tokens)]
+        aux = aux + 1
 
     print("\n\nFIM\n\n", )
 

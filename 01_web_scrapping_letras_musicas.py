@@ -10,6 +10,17 @@ from keras.layers import LSTM, Embedding, Bidirectional, CuDNNLSTM
 from keras.models import Sequential, load_model
 from sklearn import feature_extraction
 import numpy as np
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-epochs", type=int, default=1)
+parser.add_argument("-units1", type=int, default=30)
+parser.add_argument("-units2", type=int, default=30)
+parser.add_argument("-batchsize", type=int, default=64)
+parser.add_argument("-gpu", type=bool, default=False)
+
+args = vars(parser.parse_args())
+print(args)
 
 documentos = []
 arquivos = os.listdir("dados/letras-musicas")
@@ -36,7 +47,7 @@ if os.path.isfile(caminho_modelo_w2v):
     w2v_model = models.Word2Vec.load(caminho_modelo_w2v)
 else:
     print("Treinando modelo w2v...")
-    w2v_model = models.Word2Vec(docs_tokenizados, size=350, window=5, min_count=0, workers=os.cpu_count(), iter=300)
+    w2v_model = models.Word2Vec(docs_tokenizados, size=350, window=15, min_count=0, workers=os.cpu_count(), iter=300)
     w2v_model.save(caminho_modelo_w2v)
 
 vocab = list(w2v_model.wv.vocab)
@@ -70,15 +81,13 @@ for i, sentence in enumerate(sentences):
         x[i, t] = word2idx(token)
     y[i] = word2idx(next_tokens[i])
 
-
 pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
-
-units1 = 30
-units2 = 30
+units1 = args["units1"]
+units2 = args["units2"]
 caminho_modelo_lstm = "modelos/lstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1, units2)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
@@ -87,10 +96,20 @@ else:
     print("Criando novo modelo LSTM")
     model = Sequential()
     model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
-    model.add(LSTM(units1, return_sequences=True))
+
+    if args["gpu"]:
+        model.add(CuDNNLSTM(units1, return_sequences=True))
+    else:
+        model.add(LSTM(units1, return_sequences=True))
+
     model.add(Dropout(0.1))
-    model.add(LSTM(units=units2))
+
+    if args["gpu"]:
+        model.add(CuDNNLSTM(units=units2))
+    else:
+        model.add(LSTM(units=units2))
     model.add(Dropout(0.1))
+
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
     model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
 
@@ -131,4 +150,4 @@ callbacks_list = [checkpoint, print_callback]
 
 print(model.summary())
 
-model.fit(x, y, epochs=50, batch_size=64, callbacks=callbacks_list)
+model.fit(x, y, epochs=args["epochs"], batch_size=args["batchsize"], callbacks=callbacks_list)

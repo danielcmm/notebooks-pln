@@ -42,7 +42,7 @@ else:
 vocab = list(w2v_model.wv.vocab)
 
 
-# Funcoes que retornam o indice da palavra no vocabulário criado pelo word2vec e vice-versa
+# Funcoes que retornam o indice da palavra no vocabulario criado pelo word2vec e vice-versa
 def word2idx(word):
     return w2v_model.wv.vocab[word].index
 

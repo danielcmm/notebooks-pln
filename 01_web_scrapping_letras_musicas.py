@@ -70,14 +70,18 @@ for i, sentence in enumerate(sentences):
         x[i, t] = word2idx(token)
     y[i] = word2idx(next_tokens[i])
 
+
 pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
+x = x / tamanho_vocab  # Normalizando o valor dos tokens...
+y = y / tamanho_vocab
+
 units1 = 128
 units2 = 128
-caminho_modelo_lstm = "modelos/bilstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1,units2)
+caminho_modelo_lstm = "modelos/lstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1, units2)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
     model = load_model(caminho_modelo_lstm)
@@ -85,7 +89,7 @@ else:
     print("Criando novo modelo LSTM")
     model = Sequential()
     model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
-    model.add(LSTM(units1,  return_sequences=True))
+    model.add(LSTM(units1, return_sequences=True))
     model.add(Dropout(0.1))
     model.add(LSTM(units=units2))
     model.add(Dropout(0.1))

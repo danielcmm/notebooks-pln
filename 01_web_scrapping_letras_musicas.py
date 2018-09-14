@@ -76,11 +76,9 @@ tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
-x = x / tamanho_vocab  # Normalizando o valor dos tokens...
-y = y / tamanho_vocab
 
-units1 = 128
-units2 = 128
+units1 = 30
+units2 = 30
 caminho_modelo_lstm = "modelos/lstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1, units2)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
@@ -115,14 +113,12 @@ def gerar_texto(epoch, logs):
             xt[0, t] = word2idx(token)
 
         prediction = model.predict(xt, verbose=0)
-        #         ordered = (-prediction[0]).argsort()[:1]
-        #         print(len(ordered),ordered)
-        #         for x in ordered:
-        #             print(prediction[0][x])
-        #         indice_aleatorio = np.random.choice(ordered)
-        index = np.argmax(prediction)
-        result = idx2word(index)
-        print("\n" if result == "NLINHA" else result, end=" ")
+
+        # ordered = (-prediction[0]).argsort()[:5]
+        # indice = np.random.choice(ordered)
+        indice = (np.argmax(prediction))
+        result = idx2word(indice)
+        print("\n" if result == "NLINHAasda" else result, end=" ")
         seed_tokens.append(result)
         seed_tokens = seed_tokens[1:len(seed_tokens)]
 
@@ -135,4 +131,4 @@ callbacks_list = [checkpoint, print_callback]
 
 print(model.summary())
 
-model.fit(x, y, epochs=1, batch_size=64, callbacks=callbacks_list)
+model.fit(x, y, epochs=50, batch_size=64, callbacks=callbacks_list)

@@ -3,7 +3,7 @@ import os
 import nltk
 from bs4 import BeautifulSoup
 from gensim import models
-from keras.callbacks import ModelCheckpoint, LambdaCallback
+from keras.callbacks import ModelCheckpoint, LambdaCallback, TensorBoard
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM, Embedding, Bidirectional, CuDNNLSTM
@@ -11,6 +11,7 @@ from keras.models import Sequential, load_model
 from sklearn import feature_extraction
 import numpy as np
 import argparse
+import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-epochs", type=int, default=1)
@@ -24,17 +25,28 @@ args = vars(parser.parse_args())
 print(args)
 
 documentos = []
-arquivos = os.listdir("dados/letras-musicas")
-for arquivo in arquivos:
-    caminho = "dados/letras-musicas/" + arquivo
-    if os.path.isfile(caminho):
-        with open(caminho, "r") as f:
-            html = f.read()
-        html = feature_extraction.text.strip_accents_ascii(html.lower())
-        html = html.replace("<br/>", " NLINHA ")
-        html = html.replace("<p>", " NLINHA ")
-        soup = BeautifulSoup(html, "html.parser")
-        documentos.append(soup.text.strip())
+walklist = os.walk("dados/letras-musicas")
+for root, subdirs, arquivos in walklist:
+
+    for arquivo in arquivos:
+
+        if "html" not in arquivo:
+            continue
+
+        caminho = os.path.join(root, arquivo)
+
+        # caminho = "dados/letras-musicas/" + arquivo
+        if os.path.isfile(caminho):
+            with open(caminho, "r") as f:
+                html = f.read()
+            html = feature_extraction.text.strip_accents_ascii(html.lower())
+            html = html.replace("<br/>", " NLINHA ")
+            html = html.replace("<p>", " NLINHA ")
+            soup = BeautifulSoup(html, "html.parser")
+            documentos.append(soup.text.strip())
+
+qnt_musicas = len(documentos)
+print(f"{qnt_musicas} musicas carregadas")
 
 docs_tokenizados = []
 tokenizador = nltk.TreebankWordTokenizer()
@@ -42,7 +54,7 @@ for doc in documentos:
     tokens = tokenizador.tokenize(doc)
     docs_tokenizados.append(tokens)
 
-caminho_modelo_w2v = "modelos/w2v_sertanejo_1000musicas.model"
+caminho_modelo_w2v = f"modelos/w2v_{qnt_musicas}.model"
 if os.path.isfile(caminho_modelo_w2v):
     print("Carregando modelo w2v previo...")
     w2v_model = models.Word2Vec.load(caminho_modelo_w2v)
@@ -82,6 +94,9 @@ for i, sentence in enumerate(sentences):
         x[i, t] = word2idx(token)
     y[i] = word2idx(next_tokens[i])
 
+random.shuffle(x)
+random.shuffle(y)
+
 pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
@@ -89,7 +104,8 @@ print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
 units1 = args["units1"]
 units2 = args["units2"]
-caminho_modelo_lstm = "modelos/lstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1, units2)
+nome_modelo = "lstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1, units2)
+caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
     model = load_model(caminho_modelo_lstm)
@@ -151,7 +167,8 @@ def gerar_texto(epoch, logs):
 
 checkpoint = ModelCheckpoint(caminho_modelo_lstm, monitor='loss', verbose=1, save_best_only=True, mode='min')
 print_callback = LambdaCallback(on_epoch_end=gerar_texto)
-callbacks_list = [checkpoint, print_callback]
+tensorboard = TensorBoard(log_dir="logs/{}".format(nome_modelo))
+callbacks_list = [checkpoint, print_callback, tensorboard]
 
 print(model.summary())
 

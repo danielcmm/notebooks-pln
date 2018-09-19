@@ -46,7 +46,7 @@ for root, subdirs, arquivos in walklist:
             documentos.append(soup.text.strip())
 
 qnt_musicas = len(documentos)
-print(f"{qnt_musicas} musicas carregadas")
+print("{} musicas carregadas".format(qnt_musicas))
 
 docs_tokenizados = []
 tokenizador = nltk.TreebankWordTokenizer()
@@ -54,7 +54,7 @@ for doc in documentos:
     tokens = tokenizador.tokenize(doc)
     docs_tokenizados.append(tokens)
 
-caminho_modelo_w2v = f"modelos/w2v_{qnt_musicas}.model"
+caminho_modelo_w2v = "modelos/w2v_{}.model".format(qnt_musicas)
 if os.path.isfile(caminho_modelo_w2v):
     print("Carregando modelo w2v previo...")
     w2v_model = models.Word2Vec.load(caminho_modelo_w2v)

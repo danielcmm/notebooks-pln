@@ -94,8 +94,6 @@ for i, sentence in enumerate(sentences):
         x[i, t] = word2idx(token)
     y[i] = word2idx(next_tokens[i])
 
-random.shuffle(x)
-random.shuffle(y)
 
 pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]

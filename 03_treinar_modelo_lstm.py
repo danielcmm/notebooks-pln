@@ -119,7 +119,7 @@ def gerar_texto(epoch, logs):
             indice = (np.argmax(prediction))
 
         result = idx2word(indice)
-        print("\n" if result == "NLINHA" else result, end=" ")
+        print("\n" if result == "nlinha" else result, end=" ")
         seed_tokens.append(result)
         seed_tokens = seed_tokens[1:len(seed_tokens)]
         aux = aux + 1

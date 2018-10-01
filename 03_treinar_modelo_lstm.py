@@ -1,17 +1,13 @@
+import argparse
 import os
-
-import nltk
-from bs4 import BeautifulSoup
+import numpy as np
 from gensim import models
 from keras.callbacks import ModelCheckpoint, LambdaCallback, TensorBoard
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import LSTM, Embedding, Bidirectional, CuDNNLSTM
+from keras.layers import LSTM, Embedding, CuDNNLSTM
 from keras.models import Sequential, load_model
-from sklearn import feature_extraction
-import numpy as np
-import argparse
-import random
+import pickle
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-epochs", type=int, default=1)
@@ -24,45 +20,14 @@ parser.add_argument("-t", type=int, default=5)
 args = vars(parser.parse_args())
 print(args)
 
-documentos = []
-walklist = os.walk("dados/letras-musicas")
-for root, subdirs, arquivos in walklist:
+with open('modelos/docs_tokenizados_vagalume.pkl', 'rb') as fp:
+    docs_tokenizados = pickle.load(fp)
 
-    for arquivo in arquivos:
+caminho_modelo_w2v = "modelos/w2v_sertanejo_28kmusicas_tweet_tknzr_window_15_mincount_0.model"
+if not os.path.isfile(caminho_modelo_w2v):
+    raise FileExistsError("Modelo w2v nao encontrado.")
 
-        if "html" not in arquivo:
-            continue
-
-        caminho = os.path.join(root, arquivo)
-
-        # caminho = "dados/letras-musicas/" + arquivo
-        if os.path.isfile(caminho):
-            with open(caminho, "r") as f:
-                html = f.read()
-            html = feature_extraction.text.strip_accents_ascii(html.lower())
-            html = html.replace("<br/>", " NLINHA ")
-            html = html.replace("<p>", " NLINHA ")
-            soup = BeautifulSoup(html, "html.parser")
-            documentos.append(soup.text.strip())
-
-qnt_musicas = len(documentos)
-print("{} musicas carregadas".format(qnt_musicas))
-
-docs_tokenizados = []
-tokenizador = nltk.TreebankWordTokenizer()
-for doc in documentos:
-    tokens = tokenizador.tokenize(doc)
-    docs_tokenizados.append(tokens)
-
-caminho_modelo_w2v = "modelos/w2v_{}.model".format(qnt_musicas)
-if os.path.isfile(caminho_modelo_w2v):
-    print("Carregando modelo w2v previo...")
-    w2v_model = models.Word2Vec.load(caminho_modelo_w2v)
-else:
-    print("Treinando modelo w2v...")
-    w2v_model = models.Word2Vec(docs_tokenizados, size=350, window=15, min_count=0, workers=os.cpu_count(), iter=300)
-    w2v_model.save(caminho_modelo_w2v)
-
+w2v_model = models.Word2Vec.load(caminho_modelo_w2v)
 vocab = list(w2v_model.wv.vocab)
 
 
@@ -94,7 +59,6 @@ for i, sentence in enumerate(sentences):
         x[i, t] = word2idx(token)
     y[i] = word2idx(next_tokens[i])
 
-
 pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
@@ -102,7 +66,7 @@ print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
 units1 = args["units1"]
 units2 = args["units2"]
-nome_modelo = "lstm-w2v-wordlevel-{}len-{}-{}-sertanejo.model".format(maxlen, units1, units2)
+nome_modelo = "lstm-w2v-wordlevel-{}len-{}-{}-sertanejo-vagalume.model".format(maxlen, units1, units2)
 caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")

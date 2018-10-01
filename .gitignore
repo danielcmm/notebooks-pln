@@ -2,3 +2,5 @@ venv
 .DS_Store
 .idea
 .ipynb_checkpoints
+dados/letras-musicas
+modelos

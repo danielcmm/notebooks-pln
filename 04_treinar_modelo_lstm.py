@@ -25,7 +25,7 @@ print(args)
 with open('modelos/docs_tokenizados_vagalume.pkl', 'rb') as fp:
     docs_tokenizados = pickle.load(fp)
 
-caminho_modelo_w2v = "modelos/w2v_sertanejo_28kmusicas_tweet_tknzr_window_15_mincount_0.model"
+caminho_modelo_w2v = "modelos/w2v_sertanejo_28kmusicas_tweet_tknzr_window_15_mincount_10.model"
 if not os.path.isfile(caminho_modelo_w2v):
     raise FileExistsError("Modelo w2v nao encontrado.")
 

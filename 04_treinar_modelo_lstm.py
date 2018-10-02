@@ -52,6 +52,7 @@ pretrained_weights = w2v_model.wv.vectors
 tamanho_vocab = pretrained_weights.shape[0]
 tamanho_vetor_w2v = pretrained_weights.shape[1]  # 350
 print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
+print("Quantidade de sentencas para treino: {}".format(len(x)))
 
 units1 = args["units1"]
 units2 = args["units2"]

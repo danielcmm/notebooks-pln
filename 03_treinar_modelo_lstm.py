@@ -7,6 +7,7 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM, Embedding, CuDNNLSTM
 from keras.models import Sequential, load_model
+from keras.optimizers import Adam
 import pickle
 
 parser = argparse.ArgumentParser()
@@ -16,6 +17,7 @@ parser.add_argument("-units2", type=int, default=30)
 parser.add_argument("-batchsize", type=int, default=64)
 parser.add_argument("-gpu", type=bool, default=False)
 parser.add_argument("-t", type=int, default=5)
+parser.add_argument("-lr", type=float, default=0.001)
 
 args = vars(parser.parse_args())
 print(args)
@@ -66,7 +68,8 @@ print("Tamanho vocab e w2v vector: ", (tamanho_vocab, tamanho_vetor_w2v))
 
 units1 = args["units1"]
 units2 = args["units2"]
-nome_modelo = "lstm-w2v-wordlevel-{}len-{}-{}-sertanejo-vagalume.model".format(maxlen, units1, units2)
+learning_rate = args["lr"]
+nome_modelo = "lstm-w2v-wordlevel-{}len-{}-{}-lr-{}sertanejo-vagalume.model".format(maxlen, units1, units2, learning_rate)
 caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
@@ -90,7 +93,8 @@ else:
     model.add(Dropout(0.1))
 
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    optimizer = Adam(lr=learning_rate)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"] )
 
 
 def gerar_texto(epoch, logs):

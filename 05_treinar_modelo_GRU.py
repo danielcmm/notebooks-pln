@@ -5,9 +5,9 @@ from gensim import models
 from keras.callbacks import ModelCheckpoint, LambdaCallback, TensorBoard
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import LSTM, Embedding, CuDNNLSTM, GRU
+from keras.layers import Embedding, CuDNNGRU, GRU
 from keras.models import Sequential, load_model
-from keras.optimizers import Adam
+from keras import optimizers
 import pickle
 
 parser = argparse.ArgumentParser()
@@ -57,36 +57,38 @@ print("Quantidade de sentencas para treino: {}".format(len(x)))
 units1 = args["units1"]
 units2 = args["units2"]
 learning_rate = args["lr"]
-nome_modelo = "lstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-sertanejo-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate)
+nome_modelo = "gru-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-sertanejo-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate)
 caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
+
+
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
     model = load_model(caminho_modelo_lstm)
 else:
-    print("Criando novo modelo LSTM")
+    print("Criando novo modelo GRU")
     model = Sequential()
     model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
 
     if args["gpu"]:
-        model.add(CuDNNLSTM(units1, return_sequences=True))
+        model.add(CuDNNGRU(units1, return_sequences=True))
     else:
-        model.add(LSTM(units1, return_sequences=True))
+        model.add(GRU(units1, return_sequences=True))
 
     model.add(Dropout(0.1))
 
     if args["gpu"]:
-        model.add(CuDNNLSTM(units=units2))
+        model.add(CuDNNGRU(units=units2))
     else:
-        model.add(LSTM(units=units2))
+        model.add(GRU(units=units2))
     model.add(Dropout(0.1))
 
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
-    optimizer = Adam(lr=learning_rate)
-    model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
+    optimizer = optimizers.RMSprop(lr=learning_rate)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=["sparse_categorical_accuracy"])
 
 
 def gerar_texto(epoch, logs):
-    print('----- Generating text after Epoch: %d' % epoch)
+    print('----- Gerando texto apos a Epoch: %d' % epoch)
 
     idx_sentenca = np.random.randint(0, len(x))
     idx_tokens = list(x[idx_sentenca])

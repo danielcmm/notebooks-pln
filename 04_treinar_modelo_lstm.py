@@ -22,9 +22,6 @@ parser.add_argument("-lr", type=float, default=0.001)
 args = vars(parser.parse_args())
 print(args)
 
-with open('modelos/docs_tokenizados_vagalume.pkl', 'rb') as fp:
-    docs_tokenizados = pickle.load(fp)
-
 caminho_modelo_w2v = "modelos/w2v_sertanejo_28kmusicas_tweet_tknzr_window_15_mincount_10.model"
 if not os.path.isfile(caminho_modelo_w2v):
     raise FileExistsError("Modelo w2v nao encontrado.")

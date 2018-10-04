@@ -5,7 +5,7 @@ from gensim import models
 from keras.callbacks import ModelCheckpoint, LambdaCallback, TensorBoard
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import LSTM, Embedding, CuDNNLSTM
+from keras.layers import LSTM, Embedding, CuDNNLSTM, Bidirectional
 from keras.models import Sequential, load_model
 from keras.optimizers import Adam
 import pickle
@@ -54,7 +54,7 @@ print("Quantidade de sentencas para treino: {}".format(len(x)))
 units1 = args["units1"]
 units2 = args["units2"]
 learning_rate = args["lr"]
-nome_modelo = "lstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-sertanejo-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate)
+nome_modelo = "bilstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-sertanejo-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate)
 caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
@@ -65,9 +65,9 @@ else:
     model.add(Embedding(input_dim=tamanho_vocab, output_dim=tamanho_vetor_w2v, weights=[pretrained_weights]))
 
     if args["gpu"]:
-        model.add(CuDNNLSTM(units1, return_sequences=True))
+        model.add(Bidirectional(CuDNNLSTM(units1, return_sequences=True)))
     else:
-        model.add(LSTM(units1, return_sequences=True))
+        model.add(Bidirectional(LSTM(units1, return_sequences=True)))
 
     model.add(Dropout(0.1))
 

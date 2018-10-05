@@ -55,7 +55,8 @@ print("Quantidade de sentencas para treino: {}".format(len(x)))
 units1 = args["units1"]
 units2 = args["units2"]
 learning_rate = args["lr"]
-nome_modelo = "bilstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-sertanejo-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate)
+optimizer = args["optimizer"].lower()
+nome_modelo = "bilstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-optimizer-{}-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate,optimizer)
 caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
@@ -80,11 +81,11 @@ else:
 
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
 
-    if args["optimizer"].lower() == "adam":
+    if optimizer == "adam":
         print("Usando otimizador Adam")
         optimizer = Adam(lr=learning_rate)
 
-    if args["optimizer"].lower() == "rmsprop":
+    if optimizer == "rmsprop":
         print("Usando otimizador RMSProp")
         optimizer = RMSprop(lr=learning_rate)
 

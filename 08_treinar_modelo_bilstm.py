@@ -56,7 +56,9 @@ units1 = args["units1"]
 units2 = args["units2"]
 learning_rate = args["lr"]
 optimizer = args["optimizer"].lower()
-nome_modelo = "bilstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-optimizer-{}-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate,optimizer)
+batchsize = args["batchsize"]
+nome_modelo = "bilstm-w2v-wordlevel-mincount10-{}-len-{}-{}-lr-{}-optimizer-{}-batchsize-{}-vagalume.model".format(tamanho_sentencas, units1, units2, learning_rate, optimizer,
+                                                                                                                   batchsize)
 caminho_modelo_lstm = "modelos/{}".format(nome_modelo)
 if os.path.isfile(caminho_modelo_lstm):
     print("Carregando modelo lstm previo...")
@@ -82,11 +84,9 @@ else:
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
 
     if optimizer == "adam":
-        print("Usando otimizador Adam")
         optimizer = Adam(lr=learning_rate)
 
     if optimizer == "rmsprop":
-        print("Usando otimizador RMSProp")
         optimizer = RMSprop(lr=learning_rate)
 
     model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
@@ -134,4 +134,4 @@ callbacks_list = [checkpoint, print_callback, tensorboard]
 
 print(model.summary())
 
-model.fit(x, y, epochs=args["epochs"], batch_size=args["batchsize"], callbacks=callbacks_list)
+model.fit(x, y, epochs=args["epochs"], batch_size=batchsize, callbacks=callbacks_list)

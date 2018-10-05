@@ -7,7 +7,7 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM, Embedding, CuDNNLSTM, Bidirectional
 from keras.models import Sequential, load_model
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 import pickle
 
 parser = argparse.ArgumentParser()
@@ -18,6 +18,7 @@ parser.add_argument("-batchsize", type=int, default=64)
 parser.add_argument("-gpu", type=bool, default=False)
 parser.add_argument("-t", type=int, default=5)
 parser.add_argument("-lr", type=float, default=0.001)
+parser.add_argument("-optimizer", type=str, default="Adam")
 
 args = vars(parser.parse_args())
 print(args)
@@ -78,7 +79,15 @@ else:
     model.add(Dropout(0.1))
 
     model.add(Dense(tamanho_vocab, activation='softmax'))  # Quantidade de 'respostas' possiveis. Tokens neste caso.
-    optimizer = Adam(lr=learning_rate)
+
+    if args["optimizer"].lower() == "adam":
+        print("Usando otimizador Adam")
+        optimizer = Adam(lr=learning_rate)
+
+    if args["optimizer"].lower() == "rmsprop":
+        print("Usando otimizador RMSProp")
+        optimizer = RMSprop(lr=learning_rate)
+
     model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
 
 
